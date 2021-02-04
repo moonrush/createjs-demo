@@ -24,17 +24,16 @@
     </div>
 
     <script>
-        var stage;
-        var isDrawing;
-        var drawingCanvas;
-        var oldPt;
-        var oldMidPt;
-        var image;
-        var bitmap;
-        var maskFilter;
-        var cursor;
-        var text;
-        var blur;
+        let stage           // createjs舞台
+        let isDrawing       // 绘制状态
+        let drawingCanvas   // 绘制区域
+        let oldPt, oldMidPt // 绘制点、绘制中点
+        let image           // image对象
+        let bitmap          // 绘制层位图
+        let maskFilter      // 绘制层蒙版
+        let cursor          // 鼠标指针图形
+        let text            // 文本图形
+        let blur            // 模糊图片层
 
         function init() {
             shared.loading()
@@ -43,160 +42,85 @@
             image.onload = handleComplete
             image.src = '../_assets/img/xzshjcqfjt_map.jpg'
 
-            // 创建一个canvas舞台
             stage = new createjs.Stage('examCanvas')
 
-            // 构建一个text类
             text = new createjs.Text('Loading...', '30px 微软雅黑', '#FFF')
             text.set({ x: stage.canvas.width / 2, y: stage.canvas.height / 2 - 40 });
             text.shadow = new createjs.Shadow('rgba(9,153,166,1)', 0, 5, 5)
             text.textAlign = 'center'
         }
 
-        /**
-         * 当图片加载完毕后执行
-         */
         function handleComplete() {
             shared.loaded()
-
-            // 为指定的EaselJS Stage启用触摸交互。
             createjs.Touch.enable(stage);
-            /**
-             * 启用或禁用（通过传递0频率）此阶段的显示列表的鼠标悬停（mouseover 和mouseout）以及鼠标悬停事件（rollover 和rollout）
-             */
             stage.enableMouseOver()
-            /**
-             * 添加指定的事件侦听器。请注意，将多个侦听器添加到同一函数将导致触发多个回调
-             * stagemousedown 用户在画布上按下其鼠标左键时调度
-             * stagemouseup 当用户按下舞台上的某个位置，然后在页面可以检测到该位置的任意位置释放鼠标按钮时分派（这在浏览器之间略有不同）
-             * stagemousemove 当用户将鼠标移到画布上时调度
-             */
+
             stage.addEventListener('stagemousedown', handleMouseDown)
             stage.addEventListener('stagemouseup', handleMouseUp)
             stage.addEventListener('stagemousemove', handleMouseMove)
 
-            // 构建一个矢量形状
             drawingCanvas = new createjs.Shape()
-            /**
-             * 将显示对象绘制到新的画布中，然后将其用于后续绘制。对于不经常更改的复杂内容（例如，具有多个不移动的子代的Container或复杂的Vector Shape），这可以提供更快的渲染速度，因为不需要在每个刻度上都重新渲染该内容。缓存的显示对象可以自由移动，旋转，淡入淡出等，但是，如果其内容发生更改，则必须通过调用updateCache()或cache()再次手动更新缓存。您必须通过x，y，w和h参数指定缓存区域。这定义了将使用此显示对象的坐标渲染和缓存的矩形。
-             * x,y 缓存区域的坐标原点
-             * width,height 缓存区域的宽高
-             */
             drawingCanvas.cache(0, 0, image.width, image.height)
 
-            // 位图表示显示列表中的图像、画布或视频。位图可以被实例化，使用现有的HTML元素，或一个字符串
             bitmap = new createjs.Bitmap(image)
-
-            /**
-             * 适用于从掩模图像Alpha（或帆布）的目标，这样的结果的alpha通道将来自面具，和RGB通道将从目标复制。
-             */
             maskFilter = new createjs.AlphaMaskFilter(drawingCanvas.cacheCanvas)
-            /**
-             * 要应用于此显示对象的Filter对象的数组。仅当在显示对象上调用Cache或UpdateCache时，才应用/更新过滤器，并且仅将其应用于缓存的区域。
-             */
             bitmap.filters = [maskFilter]
-            // 绘制bitmap
             bitmap.cache(0, 0, image.width, image.height);
 
-            /**
-             * 遮罩在整个canvas上面的模糊层，且亮度60
-             * BlurFilter 应用模糊displayobjects盒
-             * ColorMatrixFilter 允许你进行复杂的颜色操作，如修改饱和度，亮度，或反相
-             * ColorMatrix ( brightness  contrast  saturation  hue ) 提供用于组装矩阵的辅助函数
-             */
             blur = new createjs.Bitmap(image)
-            blur.filters = [new createjs.BlurFilter(24, 24, 2), new createjs.ColorMatrixFilter(new createjs.ColorMatrix(40))]
+            blur.filters = [
+                new createjs.BlurFilter(24, 24, 2),
+                new createjs.ColorMatrixFilter(new createjs.ColorMatrix(40))
+            ]
             blur.cache(0, 0, 960, 696)
 
             text.text = "点击并拖动鼠标查看\n\n《袖珍上海警察区分局图》"
 
-            // 将子项添加到显示列表的顶部
             stage.addChild(blur, text, bitmap)
 
-            /**
-             * 绘制一个半径25的鼠标圆圈
-             */
-            cursor = new createjs.Shape(new createjs.Graphics().beginFill('rgba(255,255,255,0.5)').drawCircle(0, 0, 50))
+            cursor = new createjs.Shape(
+                new createjs.Graphics().beginFill('rgba(255,255,255,0.5)').drawCircle(0, 0, 50)
+            )
             cursor.cursor = "pointer"
 
             stage.addChild(cursor)
-
             stage.update()
         }
 
-        /**
-         * 鼠标点击触发
-         */
         function handleMouseDown(event) {
-            /**
-             * 代表了我们2维点 x / y 坐标系
-             * mouseX,mouseY 当前鼠标在画布上的位置。如果鼠标离开画布，这将指示画布上的最新位置
-             * 
-             * 即当鼠标按下时，够见一个point对象oldPt并赋值给oldMidPt
-             */
             oldPt = new createjs.Point(stage.mouseX, stage.mouseY)
             oldMidPt = oldPt
             isDrawing = true
         }
 
-        /**
-         * 鼠标移动事件
-         * midPoint是oldPt和鼠标当前位置的中点
-         * 
-         */
         function handleMouseMove(event) {
-            // 光标追随鼠标
             cursor.x = stage.mouseX
             cursor.y = stage.mouseY
 
-            // 如果鼠标未按下，更新stage并返回
             if (!isDrawing) {
                 stage.update()
                 return
             }
 
-            /**
-             * >>1 移位符操作，相当于取old和new两个点的中间值
-             */
             var midPoint = new createjs.Point(oldPt.x + stage.mouseX >> 1, oldPt.y + stage.mouseY >> 1)
 
-            /**
-             * 绘制层显示的图形实例
-             * clear 清除所有绘图指令，从而有效地重置此Graphics实例。在明确调用之后，将需要重新定义任何线条和填充样式以绘制形状
-             * setStrokeStyle（ thickness  [caps=0]  [joints=0]  [miterLimit=10]  [ignoreScale=false] ）设置笔触样式。像所有绘制方法一样，这可以链接起来，因此您可以在一行代码中定义笔触样式和颜色
-             * beginStroke 以指定的颜色开始笔触
-             * moveTo 将绘图点移到指定位置
-             * curveTo 使用控制点（cpx，cpy）从当前绘图点到（x，y）绘制二次曲线，oldPt是控制点，oldMid是要绘制的点
-             */
             drawingCanvas.graphics.clear()
                 .setStrokeStyle(100, 'round', 'round')
                 .beginStroke('rgba(0,0,0,0.2')
                 .moveTo(midPoint.x, midPoint.y)
                 .curveTo(oldPt.x, oldPt.y, oldMidPt.x, oldMidPt.y)
 
-            // 将当前位置设为oldPt
             oldPt.x = stage.mouseX
             oldPt.y = stage.mouseY
 
-            // 将中点赋值给只有要绘制的点
             oldMidPt.x = midPoint.x
             oldMidPt.y = midPoint.y
 
-            /**
-             * 将显示对象重绘到其缓存中。在没有活动缓存的情况下调用updateCache将引发错误。如果CompositeOperation为null，则在绘制之前将清除当前缓存。否则，将使用指定的CompositeOperation在现有缓存​​上绘制显示对象
-             */
             drawingCanvas.updateCache('source-over')
-
-            // 更新alpha层
             bitmap.updateCache()
-
-            // 更新舞台
             stage.update()
         }
 
-        /**
-         * 鼠标抬起时更改状态
-         */
         function handleMouseUp(event) {
             isDrawing = false
         }
