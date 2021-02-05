@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>EaselJS: Sprite Sheet Example</title>
+
+    <link href="../_assets/css/shared.css" rel="stylesheet" type="text/css" />
+    <script src="../_assets/js/shared.js"></script>
+
+    <script src="../lib/easeljs-NEXT.js"></script>
+    <!-- We also provide hosted minified versions of all CreateJS libraries.
+	  http://code.createjs.com -->
+    <script src="../lib/preloadjs-NEXT.min.js"></script>
+
+    <script id="editable">
+        var stage, w, h, loader
+        var sky, grant, ground, hill, hill2
+        var direct, jump
+        var text_direct, text_jump
+        var direction = 1
+
+        function init() {
+            shared.loading()
+
+            stage = new createjs.Stage("examCanvas")
+
+            w = stage.canvas.width
+            h = stage.canvas.height
+
+            manifest = [
+                { src: "spritesheet_grant.png", id: "grant" },
+                { src: "sky.png", id: "sky" },
+                { src: "ground.png", id: "ground" },
+                { src: "hill1.png", id: "hill" },
+                { src: "hill2.png", id: "hill2" }
+            ]
+
+            loader = new createjs.LoadQueue(false)
+            loader.addEventListener("complete", handleComplete)
+            loader.loadManifest(manifest, true, "../_assets/img/")
+        }
+
+        function handleComplete() {
+            shared.loaded()
+
+            sky = new createjs.Shape()
+            sky.graphics.beginBitmapFill(loader.getResult("sky")).drawRect(0, 0, w, h)
+
+            sky.cache(0, 0, w, h)
+
+            var groundImg = loader.getResult("ground")
+            ground = new createjs.Shape()
+            ground.graphics.beginBitmapFill(groundImg).drawRect(-groundImg.width, 0, w + groundImg.width * 2, groundImg.height)
+            ground.tileW = groundImg.width
+            ground.y = h - groundImg.height
+
+            ground.cache(-groundImg.width, 0, w + groundImg.width * 2, groundImg.height)
+
+            hill = new createjs.Bitmap(loader.getResult("hill"))
+            hill.setTransform(Math.random() * w, h - hill.image.height * 4 - groundImg.height, 4, 4)
+            hill.alpha = 0.5
+
+            hill2 = new createjs.Bitmap(loader.getResult("hill2"))
+            hill2.setTransform(Math.random() * w, h - hill2.image.height * 3 - groundImg.height, 3, 3)
+
+            var spriteSheet = new createjs.SpriteSheet({
+                framerate: 30,
+                "images": [loader.getResult("grant")],
+                "frames": { "regX": 82, "height": 292, "count": 64, "regY": 0, "width": 165 },
+                "animations": {
+                    "run": [0, 25, "run", 1.5],
+                    "jump": [26, 63, "run"]
+                }
+            })
+            grant = new createjs.Sprite(spriteSheet, "run")
+            grant.y = 35
+
+            stage.addChild(sky, hill, hill2, ground, grant)
+
+            jump = new createjs.Shape(
+                new createjs.Graphics().beginFill('lightblue').drawCircle(w - 50, h - 50, 35)
+            )
+            jump.shadow = new createjs.Shadow('rgba(0,0,0,0.2)', 5, 5, 5)
+            jump.cache(0, 0, w, h)
+
+            direct = new createjs.Shape(
+                new createjs.Graphics().beginFill('lightgreen').drawCircle(w - 140, h - 50, 35)
+            )
+            direct.shadow = new createjs.Shadow('rgba(0,0,0,0.2)', 5, 5, 5)
+            direct.cache(0, 0, w, h)
+
+            direct.addEventListener('mousedown', handleTurnDirection)
+            jump.addEventListener('mousedown', handleJumpStart)
+
+            stage.addChild(direct, jump)
+
+            text_direct = new createjs.Text("Turn\nRound", "20px Arial", "#fff");
+            text_direct.set({ x: w - 140, y: h - 70 })
+            text_direct.textAlign = 'center'
+
+            text_jump = new createjs.Text("Jump", "20px Arial", "#fff");
+            text_jump.set({ x: w - 50, y: h - 60 })
+            text_jump.textAlign = 'center'
+
+            stage.addChild(text_direct, text_jump)
+
+            createjs.Ticker.timingMode = createjs.Ticker.RAF
+            createjs.Ticker.addEventListener("tick", tick)
+
+        }
+
+        function handleJumpStart() {
+            grant.gotoAndPlay("jump")
+        }
+
+        function handleTurnDirection(event) {
+            direction *= -1
+            grant.scaleX = direction
+        }
+
+        function tick(event) {
+            var deltaS = event.delta / 1000
+            var position = grant.x + 150 * deltaS * direction
+
+            // 得到的是人物的宽度
+            var grantW = grant.getBounds().width * grant.scaleX * direction
+            grant.x = (position >= w + grantW) ? -grantW : ((position < -grantW) ? w + grantW : position)
+
+            ground.x = (ground.x - deltaS * 150 * direction) % ground.tileW
+            hill.x = (hill.x - deltaS * 30 * direction)
+            if (hill.x + hill.image.width * hill.scaleX <= 0) {
+                hill.x = w
+            }
+
+            if (hill.x >= w) {
+                console.log(hill.x)
+                hill.x = - hill.image.width * hill.scaleX
+            }
+            hill2.x = (hill2.x - deltaS * 45 * direction)
+            if (hill2.x + hill2.image.width * hill2.scaleX <= 0) {
+                hill2.x = w
+            }
+            if (hill2.x >= w) {
+                hill2.x = - hill2.image.width * hill2.scaleX
+            }
+
+            stage.update(event)
+        }
+    </script>
+</head>
+
+<body onload="init()">
+    <header class="Nora7aki">
+        <h1>雪碧图列表动画 Sprite Sheets</h1>
+
+        <p>
+            通过<code>SpriteSheet</code>构建一个可操作的动画，通过鼠标控制前进方向和跳跃
+        </p>
+
+        <p>
+            <strong>Note:</strong> Some browsers can not load images or access pixel
+            data when running local files, and may throw a security error or not
+            work unless the content is running on a server.
+        </p>
+    </header>
+
+    <div class="content" style="overflow: hidden;width: 960px;height: 400px">
+        <canvas id="examCanvas" width="960" height="400"></canvas>
+    </div>
+
+</body>
+
+</html>
