@@ -30,10 +30,11 @@
 
             manifest = [
                 { src: "spritesheet_grant.png", id: "grant" },
-                { src: "sky.png", id: "sky" },
+                { src: "sky_map.png", id: "sky" },
                 { src: "ground.png", id: "ground" },
                 { src: "hill1.png", id: "hill" },
-                { src: "hill2.png", id: "hill2" }
+                { src: "hill2.png", id: "hill2" },
+                { src: "map_mark.png", id: "mark" }
             ]
 
             loader = new createjs.LoadQueue(false)
@@ -45,9 +46,9 @@
             shared.loaded()
 
             sky = new createjs.Shape()
-            sky.graphics.beginBitmapFill(loader.getResult("sky")).drawRect(0, 0, w, h)
+            sky.graphics.beginBitmapFill(loader.getResult("sky")).drawRect(-1000, 0, 3000, h)
 
-            sky.cache(0, 0, w, h)
+            sky.cache(-1000, 0, 3000, h)
 
             var groundImg = loader.getResult("ground")
             ground = new createjs.Shape()
@@ -95,15 +96,18 @@
 
             stage.addChild(direct, jump)
 
-            text_direct = new createjs.Text("Turn\nRound", "20px Arial", "#fff");
+            text_direct = new createjs.Text("Turn\nRound", "20px Arial", "#fff")
             text_direct.set({ x: w - 140, y: h - 70 })
             text_direct.textAlign = 'center'
 
-            text_jump = new createjs.Text("Jump", "20px Arial", "#fff");
+            text_jump = new createjs.Text("Jump", "20px Arial", "#fff")
             text_jump.set({ x: w - 50, y: h - 60 })
             text_jump.textAlign = 'center'
 
-            stage.addChild(text_direct, text_jump)
+            mark = new createjs.Bitmap(loader.getResult('mark'))
+            mark.setTransform(200, 50, 0.1, 0.1)
+
+            stage.addChild(mark, text_direct, text_jump)
 
             createjs.Ticker.timingMode = createjs.Ticker.RAF
             createjs.Ticker.addEventListener("tick", tick)
@@ -132,9 +136,7 @@
             if (hill.x + hill.image.width * hill.scaleX <= 0) {
                 hill.x = w
             }
-
             if (hill.x >= w) {
-                console.log(hill.x)
                 hill.x = - hill.image.width * hill.scaleX
             }
             hill2.x = (hill2.x - deltaS * 45 * direction)
@@ -143,6 +145,14 @@
             }
             if (hill2.x >= w) {
                 hill2.x = - hill2.image.width * hill2.scaleX
+            }
+
+            sky.x = (sky.x - deltaS * 5 * direction)
+            if (sky.x <= -1000) {
+                sky.x = -2
+            }
+            if (sky.x >= 1000) {
+                sky.x = 2
             }
 
             stage.update(event)
