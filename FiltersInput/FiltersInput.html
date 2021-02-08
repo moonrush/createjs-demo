@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filters Input</title>
+    <link rel="stylesheet" href="../_assets/css/shared.css">
+    <script src="../_assets/js/shared.js"></script>
+    <script src="../lib/easeljs-NEXT.js"></script>
+    <script src="./Slider.js"></script>
+
+    <script>
+        let image
+        let map, panel
+        let colorMatrix, blurFilter
+        let sliders = {}
+
+        function Init() {
+            shared.loading()
+
+            stage = new createjs.Stage('examCanvas')
+
+            image = new Image()
+            image.onload = handleImageLoad
+            image.src = '../_assets/img/cmap_ground.png'
+        }
+
+        function handleImageLoad() {
+            shared.loaded()
+
+            stage.enableMouseOver()            
+            stage.mouseMoveOutside = true
+
+            map = new createjs.Bitmap(image)
+            map.cache(0, 0, 960, 400)
+
+            colorMatrix = new createjs.ColorMatrix()
+            colorMatrixFilter = new createjs.ColorMatrixFilter(colorMatrix)
+            blurFilter = new createjs.BlurFilter(0, 0, 2)
+
+            map.filters = [colorMatrixFilter, blurFilter]
+
+            stage.addChild(map)
+
+            panel = new createjs.Shape(
+                new createjs.Graphics().beginFill('rgba(0,0,0,0.5)').drawRect(760, 0, 200, 400)
+            )
+
+            stage.addChild(panel)
+
+            let names = ['亮度', '对比度', '饱和度', '色调', '水平模糊', '垂直模糊']
+            let labels = ['brightness', 'contrast', 'saturation', 'hue', 'blurX', 'blurY']
+            for (let i = 0; i < labels.length; i++) {
+                let n = names[i]
+                let l = labels[i]
+
+                let x = 780
+                let y = i * 60 + 20
+                let val = i < 4 ? 0.5 : 0
+
+                sliders[l] = SliderItem(n, x, y, val)
+            }
+
+            stage.update()
+        }
+
+        function SliderItem(name, x, y, val = 0) {
+            let label = new createjs.Text(name, '18px 微软雅黑', '#fff').set({ x, y })
+            let slider = new Slider(0, 1, 160, 20).set({ x, y: y + 25 })
+            slider.value = val
+
+            slider.on("change", handleSliderChange, this);
+
+            stage.addChild(label, slider)
+
+            return slider
+        }
+
+        function handleSliderChange() {
+            blurFilter.blurX = sliders.blurX.value * 10;
+            blurFilter.blurY = sliders.blurY.value * 10;
+
+            colorMatrix.setColor(
+                sliders.brightness.value * 200 - 100,
+                sliders.contrast.value * 200 - 100,
+                sliders.saturation.value * 200 - 100,
+                sliders.hue.value * 360 - 180);
+
+            map.updateCache();
+            stage.update();
+        }
+
+    </script>
+</head>
+
+<body onload="Init()">
+    <header class="Nora7aki">
+        <h1>滤镜Filters</h1>
+
+        <p>
+            自定义 <code>Slider</code> 类，继承于 <code>Shape</code>，对其进行操作，从而调整 <code>map</code> 层的
+            <code>ColorMatrixFilter</code> 和
+            <code>BlurFilter</code>
+        </p>
+    </header>
+
+    <div>
+        <canvas id="examCanvas" width="960" height="400"></canvas>
+    </div>
+</body>
+
+</html>
