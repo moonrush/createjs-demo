@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EaselJS: Performance</title>
+
+    <link href="../_assets/css/shared.css" rel="stylesheet" type="text/css" />
+
+    <script src="../lib/easeljs-NEXT.js"></script>
+    <script src="../lib/preloadjs-NEXT.min.js"></script>
+
+    <script>
+        let stage, loader, fpsLabel
+
+        function init() {
+            // 利用StageGL实现
+            stage = new createjs.StageGL("examCanvas")
+
+            loader = new createjs.LoadQueue(false)
+            loader.addEventListener('complete', handleComplete)
+            loader.loadManifest(
+                [{
+                    src: 'mansheet.png', id: 'man'
+                }],
+                true, '../_assets/img/')
+        }
+
+        function handleComplete() {
+            let spriteSheet = new createjs.SpriteSheet({
+                'images': [loader.getResult('man')],
+                'frames': { 'width': 160, 'height': 280, 'count': 2, 'regX': 80, 'regY': 140 },
+                'animations': {
+                    'play': [0, 1, 'play', 0.5]
+                }
+            })
+
+            for (let i = 0; i < 5000; i++) {
+                let man = new createjs.Sprite(spriteSheet, 'play')
+                man.setTransform(Math.random() * 960, Math.random() * 400, 0.1, 0.1)
+                stage.addChild(man)
+            }
+
+            fpsLabel = new createjs.Text("@ -- fps", "bold 20px Arial", "#000");
+            fpsBack = new createjs.Shape(
+                new createjs.Graphics().beginFill('#fff').drawRect(0, 0, 100, 20)
+            )
+
+            fpsLabel.cache(0, 0, 960, 400)
+            fpsBack.cache(0, 0, 960, 400)
+
+            fpsLabel.x = fpsBack.x = 10;
+            fpsLabel.y = fpsBack.y = 20;
+
+            stage.addChild(fpsBack, fpsLabel)
+
+            createjs.Ticker.timingMode = createjs.Ticker.RAF
+            createjs.Ticker.addEventListener("tick", tick)
+        }
+
+        function tick() {
+            let fps = Math.round(createjs.Ticker.getMeasuredFPS())
+            fpsLabel.text = ` @ ${fps} fps`
+            fpsLabel.updateCache()
+            stage.update()            
+        }
+
+    </script>
+</head>
+
+<body onload="init()">
+    <header class="Nora7aki">
+        <h1>性能测试 performace</h1>
+
+        <p>
+            通过<code>SpriteSheet</code>构建一个可操作的动画，通过鼠标控制前进方向和跳跃
+        </p>
+    </header>
+
+    <div class="content" style="overflow: hidden;width: 960px;height: 400px">
+        <canvas id="examCanvas" width="960" height="400"></canvas>
+    </div>
+</body>
+
+</html>
