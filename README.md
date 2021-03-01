@@ -1,11 +1,37 @@
 # createjs learning &amp; demo
 
-[AlphaMaskReveal说明](https://blog.csdn.net/u011974819/article/details/113628878)
+基于Createjs构建的demo
 
-[SpriteSheet说明](https://blog.csdn.net/u011974819/article/details/113715106)
+**目录**
+[AlphaMaskReveal](#alphamaskreveal)
+[SpriteSheet](#spritesheet)
+[FilterInput](#filterinput)
+[OverMap](#overmap)
+[Performance](#performance)
+[Irregular](#irregular)
 
-[FilterInput说明](https://blog.csdn.net/u011974819/article/details/113735601)
 
-[OverMap说明](https://blog.csdn.net/u011974819/article/details/113796604)
 
-[Performance说明](https://blog.csdn.net/u011974819/article/details/113843579)
+<h2 id="alphamaskreveal">AlphaMaskReveal</h2>
+
+[AlphaMaskReveal 实现说明](https://blog.csdn.net/u011974819/article/details/113628878)
+
+<h2 id="spritesheet">SpriteSheet</h2>
+
+[SpriteSheet 实现说明](https://blog.csdn.net/u011974819/article/details/113715106)
+
+<h2 id="filterinput">FilterInput</h2>
+
+[FilterInput 实现说明](https://blog.csdn.net/u011974819/article/details/113735601)
+
+<h2 id="overmap">OverMap</h2>
+
+[OverMap 实现说明](https://blog.csdn.net/u011974819/article/details/113796604)
+
+<h2 id="performance">Performance</h2>
+
+[Performance 实现说明](https://blog.csdn.net/u011974819/article/details/113843579)
+
+<h2 id="irregular">Irregular</h2>
+
+[Irregular 实现说明](https://blog.csdn.net/u011974819/article/details/114272142)
