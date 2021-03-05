@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irregular Area+ demo</title>
+
+    <link href="../_assets/css/shared.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.bootcdn.net/ajax/libs/animate.css/4.1.1/animate.compat.min.css" rel="stylesheet">
+
+    <script src="../lib/easeljs-NEXT.js"></script>
+    <script src="../lib/preloadjs-NEXT.min.js"></script>
+
+    <style>
+        .animate {
+            position: absolute;
+            text-align: center;
+            left: 32%;
+            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 0 5px 5px #fff;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="Nora7aki">
+        <h1>在地图上叠加不规则区域 Irregular Area 2</h1>
+
+        <p>
+            采用真实地图数据，通过Adobe Illustrator获取实际的 <code>svg</code> 数据，通过Adobe Animate中的一系列操作，导出可用于
+            <code>createjs.Graphics.decodePath</code> 的路径代码。
+        </p>
+    </header>
+    <div class="cnt">
+        <div class="animate"></div>
+        <canvas id="examCanvas" width="422" height="424"></canvas>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script>
+        let stage, path, loader
+        let animate
+
+        let g = axios.get('data.json')
+
+        const init = () => {
+            stage = new createjs.Stage('examCanvas')
+
+            createjs.Ticker.timingMode = createjs.Ticker.RAF
+            createjs.Ticker.addEventListener('tick', tick)
+
+            animate = document.querySelector('.animate')
+
+            g.then(function (res) {
+                path = res.data
+
+                path.forEach(item => {
+                    let shape = new createjs.Shape(
+                        new createjs.Graphics().s('#fff').f(`rgb(${rc()},200,100`).p(item.path)
+                    )
+                    let [x, y] = item.bias.split(',')
+
+                    shape.setTransform(x, y)
+
+                    shape.addEventListener('click', e => {
+                        animateCSS(animate, 'bounceIn')
+                        animate.innerText = item.name
+                        animate.style.color = e.target.graphics._fill.style
+                    })
+
+                    stage.addChild(shape)
+                })
+            })
+        }
+
+        const tick = e => {
+            stage.update()
+        }
+
+        const rc = () => Math.random() * 255
+
+        // animate动画执行方法
+        const animateCSS = (element, animation, prefix = '') =>
+            new Promise((resolve, reject) => {
+                const animationName = `${prefix}${animation}`;
+                const node = element.nodeType == 1 ? element : document.querySelector(element);
+
+                node.classList.add(`${prefix}animated`, animationName);
+
+                function handleAnimationEnd(event) {
+                    event.stopPropagation();
+                    node.classList.remove(`${prefix}animated`, animationName);
+                    resolve('Animation ended');
+                }
+
+                node.addEventListener('animationend', handleAnimationEnd, { once: true });
+            });
+
+        window.onload = init
+    </script>
+</body>
+
+</html>
